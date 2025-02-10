@@ -1,0 +1,141 @@
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { FaFacebook } from "react-icons/fa";
+import Link from "next/link";
+import bcrypt from "bcryptjs"; // For hashing passwords
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+
+export default function Signup() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false); // Track signup status
+
+  // Handle input changes
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // Validate email format
+  const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
+
+  
+  const handleSignup = async () => {
+    const { full_name, email, password } = formData;
+  
+    // Basic Validation
+    if (!full_name || !email || !password) {
+      toast.error("All fields are required!");
+      return;
+    }
+  
+    if (!isValidEmail(email)) {
+      toast.error("Invalid email format!");
+      return;
+    }
+  
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters!");
+      return;
+    }
+  
+    setLoading(true); // Start loading
+  
+    try {
+      // Hash the password before sending
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      // Call signup API
+      const response = await axios.post("/api/signup", {
+        full_name,
+        email,
+        password: hashedPassword,
+        otp: "1231",  // You might want to change this to dynamically handle OTP
+      });
+  
+      // Handle API response
+      if (response.data.success) {
+        toast.success("Signup successful! Please check your email.");
+        router.push("/");  // Redirect to home page or any other page
+      } else {
+        toast.error(response.data.error || "Signup failed. Please try again.");
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+      console.error(error);
+    } finally {
+      setLoading(false); // Stop loading
+    }
+  };
+  
+  return (
+    <>
+      <div className="w-full h-screen bg-gradient-to-br from-primaryBlue to-secondaryGreen flex justify-center items-center">
+        <div className="w-1/3 h-[70vh] flex flex-col justify-between items-center gap-4 bg-white rounded-lg shadow-xl p-10">
+          <div className="w-full flex flex-col gap-4 justify-center items-center">
+            <h1 className="text-3xl font-semibold">Signup</h1>
+            <Input
+              type="text"
+              name="full_name"
+              value={formData.full_name}
+              onChange={handleChange}
+              placeholder="Full Name"
+            />
+            <Input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Email"
+            />
+            <Input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Password"
+            />
+            <Button
+              variant="outline"
+              className="bg-gradient-to-tl from-primary to-secondary text-white rounded-full w-full hover:text-white py-5"
+              onClick={handleSignup}
+              disabled={loading}
+            >
+              {loading ? "Signing up..." : "SIGNUP"}
+            </Button>
+            <div className="bg-gray-400 w-full h-[1px]" />
+
+            <p>Or Sign up Using</p>
+            <div className="flex flex-row justify-center items-center gap-4">
+              <button>
+                <img
+                  src="/assets/google.png"
+                  alt="google"
+                  className="w-8 h-8"
+                />
+              </button>
+              <FaFacebook className="size-8 text-blue-700 " />
+            </div>
+          </div>
+          <div>
+            <Link href="/" className="text-gray-600">
+              SIGNIN
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
