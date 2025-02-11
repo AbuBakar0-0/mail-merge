@@ -74,8 +74,8 @@ export default function Signup() {
 
   return (
     <>
-      <div className="w-full h-screen bg-gradient-to-br from-primaryBlue to-secondaryGreen flex justify-center items-center">
-        <div className="w-1/3 h-[70vh] flex flex-col justify-between items-center gap-4 bg-white rounded-lg shadow-xl p-10">
+      <div className="w-full h-screen bg-gradient-to-br from-primary to-secondary flex justify-center items-center">
+        <div className="w-1/3 flex flex-col justify-between items-center gap-4 bg-white rounded-lg shadow-xl p-10">
           <div className="w-full flex flex-col gap-4 justify-center items-center">
             <h1 className="text-3xl font-semibold">Signup</h1>
             <Input
@@ -108,18 +108,6 @@ export default function Signup() {
               {loading ? "Signing up..." : "SIGNUP"}
             </Button>
             <div className="bg-gray-400 w-full h-[1px]" />
-
-            <p>Or Sign up Using</p>
-            <div className="flex flex-row justify-center items-center gap-4">
-              <button>
-                <img
-                  src="/assets/google.png"
-                  alt="google"
-                  className="w-8 h-8"
-                />
-              </button>
-              <FaFacebook className="size-8 text-blue-700 " />
-            </div>
           </div>
           <div>
             <Link href="/" className="text-gray-600">

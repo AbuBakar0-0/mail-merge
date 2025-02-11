@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function layout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
+  const router = useRouter();
   const links = [
     {
       name: "Dashboard",
@@ -26,6 +28,11 @@ export default function layout({ children }) {
     },
   ];
 
+  const handleLogout = () => {
+    localStorage.removeItem("user_id");
+    Cookies.remove("user_id");
+    router.push("/");
+  };
   return (
     <div className="flex flex-col h-screen">
       {/* Topbar */}
@@ -43,7 +50,10 @@ export default function layout({ children }) {
         </button>
         <div className="hidden md:flex items-center space-x-4">
           <span>Welcome, User</span>
-          <button className=" text-primary px-4 py-2 rounded">
+          <button
+            className=" text-primary px-4 py-2 rounded"
+            onClick={() => handleLogout()}
+          >
             Logout
           </button>
         </div>

@@ -3,6 +3,7 @@
 import { login } from "@/actions/auth/login";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Cookies from "js-cookie";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -40,6 +41,7 @@ export default function Home() {
 
     if (response.id != undefined) {
       toast.success("Successfully Logged In");
+      Cookies.set("user_id", response.id, { expires: 7 }); // Expires in 7 days
       localStorage.setItem("user_id", response.id);
       router.push("/Dashboard");
     } else {
@@ -48,8 +50,8 @@ export default function Home() {
   };
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-primaryBlue to-secondaryGreen flex justify-center items-center">
-      <div className="w-1/3 h-[70vh] flex flex-col justify-between items-center gap-4 bg-white rounded-lg shadow-xl p-10">
+    <div className="w-full h-screen bg-gradient-to-br from-primary to-secondary flex justify-center items-center">
+      <div className="w-1/3 flex flex-col justify-between items-center gap-4 bg-white rounded-lg shadow-xl p-10">
         <div className="w-full flex flex-col gap-4 justify-center items-center">
           <h1 className="text-3xl font-semibold">Login</h1>
           <Input
@@ -79,13 +81,13 @@ export default function Home() {
           </Button>
           <div className="bg-gray-400 w-full h-[1px]" />
 
-          <p>Or Sign up Using</p>
-          <div className="flex flex-row justify-center items-center gap-4">
+          {/* <p>Or Sign up Using</p> */}
+          {/* <div className="flex flex-row justify-center items-center gap-4">
             <button>
               <img src="/assets/google.png" alt="google" className="w-8 h-8" />
             </button>
             <FaFacebook className="size-8 text-blue-700 " />
-          </div>
+          </div> */}
         </div>
         <div>
           <Link href="/Signup" className="text-gray-600">
