@@ -103,8 +103,6 @@ export default function AccountsList() {
       email: item.email,
     }));
 
-    alert(JSON.stringify(fileData));
-
     // Insert data into list_emails table
     const { error: emailsError } = await supabase
       .from("list_emails")

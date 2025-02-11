@@ -26,6 +26,7 @@
     "nodemailer": "^6.10.0",
     "papaparse": "^5.5.2",
     "path": "^0.12.7",
+    "quill-image-resize-module-react": "^3.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.1",

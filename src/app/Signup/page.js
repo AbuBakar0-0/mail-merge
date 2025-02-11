@@ -1,14 +1,14 @@
 "use client";
 
+import { signup } from "@/actions/auth/signup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { FaFacebook } from "react-icons/fa";
-import Link from "next/link";
 import bcrypt from "bcryptjs"; // For hashing passwords
-import toast from "react-hot-toast";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { useState } from "react";
+import toast from "react-hot-toast";
+import { FaFacebook } from "react-icons/fa";
 
 export default function Signup() {
   const router = useRouter();
@@ -31,46 +31,38 @@ export default function Signup() {
   // Validate email format
   const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
-  
   const handleSignup = async () => {
     const { full_name, email, password } = formData;
-  
+
     // Basic Validation
     if (!full_name || !email || !password) {
       toast.error("All fields are required!");
       return;
     }
-  
+
     if (!isValidEmail(email)) {
       toast.error("Invalid email format!");
       return;
     }
-  
+
     if (password.length < 6) {
       toast.error("Password must be at least 6 characters!");
       return;
     }
-  
+
     setLoading(true); // Start loading
-  
+
     try {
       // Hash the password before sending
       const hashedPassword = await bcrypt.hash(password, 10);
-  
+
       // Call signup API
-      const response = await axios.post("/api/signup", {
-        full_name,
-        email,
-        password: hashedPassword,
-        otp: "1231",  // You might want to change this to dynamically handle OTP
-      });
-  
-      // Handle API response
-      if (response.data.success) {
+      const response = await signup(full_name, email, hashedPassword);
+      if (response == "User registered successfully!") {
         toast.success("Signup successful! Please check your email.");
-        router.push("/");  // Redirect to home page or any other page
+        router.push("/");
       } else {
-        toast.error(response.data.error || "Signup failed. Please try again.");
+        toast.error("Signup failed. Please try again.");
       }
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
@@ -79,7 +71,7 @@ export default function Signup() {
       setLoading(false); // Stop loading
     }
   };
-  
+
   return (
     <>
       <div className="w-full h-screen bg-gradient-to-br from-primaryBlue to-secondaryGreen flex justify-center items-center">

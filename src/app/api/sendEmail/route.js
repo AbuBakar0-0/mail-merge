@@ -1,75 +1,103 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
-import fs from "fs/promises";
+import { writeFile, mkdir, unlink } from "fs/promises";
+import path from "path";
 
 export async function POST(req) {
+  let filePaths = [];
+
   try {
-    const contentType = req.headers.get("content-type") || "";
+    const formData = await req.formData();
+    const subject = formData.get("subject");
+    const description = formData.get("body"); // HTML content
+    const files = formData.getAll("files"); // Get multiple files
+    const to = formData.get("to");
+    const host = formData.get("host");
+    const sender_email = formData.get("sender_email");
+    const sender_password = formData.get("sender_password");
 
-    // JSON Request (No Attachments)
-    if (contentType.includes("application/json")) {
-      const body = await req.json();
-      return await sendEmail(body);
+    console.log(host, sender_email, sender_password);
+    const tmpDir = path.join(process.cwd(), "tmp");
+    await mkdir(tmpDir, { recursive: true });
+
+    const transporter = nodemailer.createTransport({
+      host: host,
+      port: parseInt(process.env.SMTP_PORT),
+      secure: false,
+      requireTLS: true,
+      tls: {
+        rejectUnauthorized: false,
+      },
+      auth: {
+        user: sender_email,
+        pass: sender_password,
+      },
+    });
+
+    await transporter.verify();
+
+    let attachments = [];
+    for (const file of files) {
+      if (file && file.size > 0) {
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+
+        const timestamp = Date.now();
+        const fileName = `${timestamp}-${file.name}`;
+        const filePath = path.join(tmpDir, fileName);
+        await writeFile(filePath, buffer);
+        filePaths.push(filePath);
+
+        attachments.push({
+          filename: file.name,
+          path: filePath,
+          contentType: file.type,
+        });
+      }
     }
 
-    // Multipart FormData Request (With Attachments)
-    if (contentType.includes("multipart/form-data")) {
-      const formData = await req.formData();
-      return await processFormData(formData);
+    const mailOptions = {
+      from: sender_email,
+      to: to,
+      subject: subject,
+      html: description, // Changed from 'text' to 'html' to support formatted content
+      attachments: attachments,
+    };
+
+    console.log(
+      "Sending email with options:",
+      JSON.stringify(mailOptions, null, 2)
+    );
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent: ", info.response);
+
+    // Cleanup all temporary files
+    for (const filePath of filePaths) {
+      try {
+        await unlink(filePath);
+      } catch (err) {
+        console.error("Error deleting temporary file:", err);
+      }
     }
 
-    return NextResponse.json({ success: false, message: "Unsupported Content-Type" }, { status: 400 });
+    return NextResponse.json(
+      { message: "Email sent successfully", info },
+      { status: 200 }
+    );
   } catch (error) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
-  }
-}
-
-// ✅ Function to process FormData
-async function processFormData(formData) {
-  const fields = {};
-  const files = [];
-
-  for (const entry of formData.entries()) {
-    const [key, value] = entry;
-
-    if (value instanceof Blob) {
-      const buffer = Buffer.from(await value.arrayBuffer());
-      const filePath = `./public/uploads/${value.name}`;
-      await fs.writeFile(filePath, buffer);
-      files.push({ filename: value.name, path: filePath });
-    } else {
-      fields[key] = value;
+    // Cleanup files if error occurs
+    for (const filePath of filePaths) {
+      try {
+        await unlink(filePath);
+      } catch (err) {
+        console.error("Error deleting temporary file:", err);
+      }
     }
+
+    console.error("Error sending email:", error);
+    return NextResponse.json(
+      { error: "Failed to send email", details: error.message },
+      { status: 500 }
+    );
   }
-
-  return await sendEmail(fields, files);
-}
-
-// ✅ Function to send email
-async function sendEmail(fields, attachments = []) {
-  const { host, sender_email, password, to, subject, text } = fields;
-
-  if (!host || !sender_email || !password || !to || !subject || !text) {
-    return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
-  }
-
-  const transporter = nodemailer.createTransport({
-    host,
-    port: 587,
-    secure: false,
-    auth: { user: sender_email, pass: password },
-  });
-
-  const info = await transporter.sendMail({
-    from: sender_email,
-    to,
-    subject,
-    text,
-    attachments,
-  });
-
-  // Delete uploaded files after sending email
-  await Promise.all(attachments.map((file) => fs.unlink(file.path)));
-
-  return NextResponse.json({ success: true, message: "Email sent!", info });
 }

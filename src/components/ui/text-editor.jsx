@@ -1,30 +1,43 @@
-// components/Editor.js
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import ReactQuill from "react-quill-new";
+import ReactQuill, { Quill } from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; // Import styles
 import axios from "axios";
+import ImageResize from "quill-image-resize-module-react"; // Import image resize module
+
+// Register the ImageResize module
+Quill.register("modules/imageResize", ImageResize);
 
 // Define toolbar options
 const modules = {
     toolbar: [
-        [{ 'header': '1' }, { 'header': '2' }, { 'font': [] }],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['bold', 'italic', 'underline'],
-        ['image'],
-        [{ 'color': [] }, { 'background': [] }],
-        ['link'],
+        [{ header: "1" }, { header: "2" }, { font: [] }],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ align: [] }],
+        ["bold", "italic", "underline"],
+        ["image"],
+        [{ color: [] }, { background: [] }],
+        ["link"],
     ],
+    imageResize: {
+        modules: ["Resize", "DisplaySize", "Toolbar"], // Enable resizing
+    },
 };
 
 const formats = [
-    'header', 'font', 'list', 'align', 'bold', 'italic', 'underline',
-    'image', 'color', 'background', 'link',
+    "header",
+    "font",
+    "list",
+    "align",
+    "bold",
+    "italic",
+    "underline",
+    "image",
+    "color",
+    "background",
+    "link",
 ];
-
-
 
 const Editor = ({ editorContent, handleChange }) => {
     const quillRef = useRef(null); // Reference to ReactQuill
@@ -56,7 +69,6 @@ const Editor = ({ editorContent, handleChange }) => {
         input.onchange = async () => {
             const file = input.files[0];
             if (file) {
-
                 try {
                     const imageUrl = await uploadToCloudinary(file);
                     const quill = quillRef.current.getEditor(); // Accessing the editor instance
