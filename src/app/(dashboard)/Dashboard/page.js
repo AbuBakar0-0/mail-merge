@@ -13,6 +13,8 @@ function CreateCampaign() {
   const [templates, setTemplates] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [progress, setProgress] = useState(0); // Added progress state
+  const [isSending, setIsSending] = useState(false); // Added sending status
   const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -68,9 +70,10 @@ function CreateCampaign() {
     }
 
     try {
+      setIsSending(true);
+      setProgress(0);
       toast.loading("Starting campaign...");
 
-      // Fetch emails associated with the selected account
       const { data: emails, error: emailsError } = await supabase
         .from("list_emails")
         .select("*")
@@ -78,15 +81,16 @@ function CreateCampaign() {
 
       if (emailsError) throw emailsError;
       if (!emails || emails.length === 0) {
+        setIsSending(false);
         toast.dismiss();
         return toast.error("No emails found for the selected account list.");
       }
 
-      // Find the selected template
       const template = templates.find(
         (t) => t.id === parseInt(selectedTemplate)
       );
       if (!template) {
+        setIsSending(false);
         toast.dismiss();
         return toast.error("Template not found.");
       }
@@ -99,14 +103,14 @@ function CreateCampaign() {
       if (hostingError) throw hostingError;
 
       toast.dismiss();
-      toast.success("Campaign started successfully!");
-      console.log(JSON.stringify(emails));
+      toast.success("Campaign started!");
+
       for (let i = 0; i < emails.length; i++) {
         const body = template.content.replaceAll(
           "{{full_name}}",
           emails[i].full_name
         );
-        const res = await sendEmail({
+        await sendEmail({
           subject: template.name,
           body: body,
           to: emails[i].email,
@@ -114,9 +118,14 @@ function CreateCampaign() {
           sender_email: hosting.sender_email,
           sender_password: hosting.sender_password,
         });
-        console.log(res);
+
+        setProgress(((i + 1) / emails.length) * 100); // Update progress
       }
+
+      toast.success("All emails sent successfully!");
+      setIsSending(false);
     } catch (error) {
+      setIsSending(false);
       toast.dismiss();
       toast.error("Error starting campaign.");
       console.error("Error:", error);
@@ -131,8 +140,6 @@ function CreateCampaign() {
     sender_email,
     sender_password,
   }) => {
-    setFormData({ ...formData, status: "Sending..." });
-
     try {
       const form = new FormData();
 
@@ -153,14 +160,8 @@ function CreateCampaign() {
       });
 
       if (!response.ok) throw new Error("Failed to send email");
-
-      setFormData({ subject: "", description: "", files: [] });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      toast.success("Emails sent successfully!");
     } catch (error) {
-      toast.error("Failed to send emails");
+      toast.error("Failed to send some emails");
       console.error("Error:", error);
     }
   };
@@ -173,6 +174,7 @@ function CreateCampaign() {
           <Link href="/Settings">Configure Server</Link>
         </Button>
       </div>
+
       <div className="w-full flex flex-wrap justify-between items-center gap-4">
         <select
           value={selectedAccount}
@@ -214,10 +216,22 @@ function CreateCampaign() {
           </label>
         </div>
 
-        <Button onClick={handleSubmit} className="text-white">
-          Send Emails
+        <Button onClick={handleSubmit} className="text-white" disabled={isSending}>
+          {isSending ? "Sending..." : "Send Emails"}
         </Button>
       </div>
+
+      {isSending && (
+        <div className="w-full mt-4">
+          <div className="w-full bg-gray-200 rounded-full h-4">
+            <div
+              className="bg-blue-500 h-4 rounded-full transition-all duration-500"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <p className="text-center mt-2">{Math.round(progress)}% Completed</p>
+        </div>
+      )}
     </div>
   );
 }
