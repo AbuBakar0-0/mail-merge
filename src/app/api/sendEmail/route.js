@@ -16,7 +16,8 @@ export async function POST(req) {
     const sender_email = formData.get("sender_email");
     const sender_password = formData.get("sender_password");
 
-    const tmpDir = path.join(process.cwd(), "/public/tmp");
+    // const tmpDir = path.join(process.cwd(), "/tmp");
+    const tmpDir = "/tmp";
     await mkdir(tmpDir, { recursive: true });
 
     const transporter = nodemailer.createTransport({
