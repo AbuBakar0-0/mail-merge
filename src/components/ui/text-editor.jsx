@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import ImageResize from "quill-image-resize-module-react"; // Import image resize module
+import { useEffect, useRef, useState } from "react";
 import ReactQuill, { Quill } from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css"; // Import styles
-import axios from "axios";
-import ImageResize from "quill-image-resize-module-react"; // Import image resize module
 
 // Register the ImageResize module
 Quill.register("modules/imageResize", ImageResize);
