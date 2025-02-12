@@ -10,6 +10,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { deleteDataById } from "@/hooks/deleteDataById";
+import { getAllData } from "@/hooks/getAllData";
+import { getDataById } from "@/hooks/getDataById";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Papa from "papaparse";
@@ -121,8 +123,11 @@ export default function AccountsList() {
   };
 
   const fetchData = async () => {
-    const { data, error } = await supabase.from("accounts_list").select("*");
-    if (!error) setData(data);
+    const data = await getAllData({
+      table_name: "accounts_list",
+      user_id: localStorage.getItem("user_id"),
+    });
+    setData(data);
   };
 
   useEffect(() => {

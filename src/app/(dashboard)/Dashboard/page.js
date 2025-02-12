@@ -28,11 +28,11 @@ function CreateCampaign() {
       try {
         const { data: accounts, error: accountsError } = await supabase
           .from("accounts_list")
-          .select("id, name");
+          .select("id, name").eq("user_id",localStorage.getItem("user_id"));
 
         const { data: templates, error: templatesError } = await supabase
           .from("templates")
-          .select("id, name, content");
+          .select("id, name, content").eq("user_id",localStorage.getItem("user_id"));
 
         if (accountsError) throw accountsError;
         if (templatesError) throw templatesError;
