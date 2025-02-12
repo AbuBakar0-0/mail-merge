@@ -16,7 +16,6 @@ export async function POST(req) {
     const sender_email = formData.get("sender_email");
     const sender_password = formData.get("sender_password");
 
-    console.log(host, sender_email, sender_password);
     const tmpDir = path.join(process.cwd(), "tmp");
     await mkdir(tmpDir, { recursive: true });
 
