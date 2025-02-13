@@ -85,7 +85,7 @@ export default function AccountsList() {
     // Insert into accounts_list table
     const { data: insertedAccount, error: accountError } = await supabase
       .from("accounts_list")
-      .insert({ name })
+      .insert({ user_id: localStorage.getItem("user_id"), name })
       .select("id")
       .single();
 

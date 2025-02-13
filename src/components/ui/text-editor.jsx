@@ -15,9 +15,8 @@ const modules = {
         [{ list: "ordered" }, { list: "bullet" }],
         [{ align: [] }],
         ["bold", "italic", "underline"],
-        ["image"],
+        ["image", "link"], // Include link option in the toolbar
         [{ color: [] }, { background: [] }],
-        ["link"],
     ],
     imageResize: {
         modules: ["Resize", "DisplaySize", "Toolbar"], // Enable resizing
@@ -40,7 +39,6 @@ const formats = [
 
 const Editor = ({ editorContent, handleChange }) => {
     const quillRef = useRef(null); // Reference to ReactQuill
-    const [editorInstance, setEditorInstance] = useState(null);
 
     const uploadToCloudinary = async (file) => {
         const imageFormData = new FormData();
@@ -70,9 +68,20 @@ const Editor = ({ editorContent, handleChange }) => {
             if (file) {
                 try {
                     const imageUrl = await uploadToCloudinary(file);
-                    const quill = quillRef.current.getEditor(); // Accessing the editor instance
+                    const quill = quillRef.current.getEditor();
                     const range = quill.getSelection();
-                    quill.insertEmbed(range.index, "image", imageUrl); // Insert the image into the editor
+                    
+                    // Insert image with a custom class
+                    quill.insertEmbed(range.index, "image", imageUrl);
+                    
+                    // Apply inline styles after insertion
+                    setTimeout(() => {
+                        const images = document.querySelectorAll(".ql-editor img");
+                        images.forEach(img => {
+                            img.style.display = "inline-block";
+                            img.style.marginRight = "10px";
+                        });
+                    }, 100);
                 } catch (error) {
                     console.error("Error uploading image to Cloudinary", error);
                 }
@@ -80,13 +89,25 @@ const Editor = ({ editorContent, handleChange }) => {
         };
     };
 
-    // Set up the image handler after the editor mounts
+    // Handle hyperlink insertion
+    const linkHandler = () => {
+        const quill = quillRef.current.getEditor();
+        const range = quill.getSelection();
+        if (range) {
+            const url = prompt("Enter the URL:");
+            if (url) {
+                quill.format("link", url);
+            }
+        }
+    };
+
+    // Set up handlers after the editor mounts
     useEffect(() => {
         if (quillRef.current) {
             const quill = quillRef.current.getEditor();
             const toolbar = quill.getModule("toolbar");
-            toolbar.addHandler("image", imageHandler); // Attach the image handler to the toolbar
-            setEditorInstance(quill);
+            toolbar.addHandler("image", imageHandler);
+            toolbar.addHandler("link", linkHandler);
         }
     }, []);
 
